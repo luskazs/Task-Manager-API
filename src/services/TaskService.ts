@@ -1,4 +1,4 @@
-import type { Task } from "../types/Task.js";
+import { prisma } from "../config/prismaClient.js";
 
 type UpdateTaskData = {
     title?: string;
@@ -7,59 +7,52 @@ type UpdateTaskData = {
 
 
 class TaskService {
-  private tasks: Task[] = [];
 
-  list(completed?: boolean) {
-    if(completed === undefined){
-        return this.tasks
-    }
-    return this.tasks.filter((task) => task.completed === completed);
+  async getAll(completed?: boolean) {
+  if (completed === undefined) {
+    return await prisma.task.findMany();
   }
 
-  findById(id: number){
-    return this.tasks.find((task) => task.id === id)
-  }
-
-  create(title: string) {
-    const newTask: Task = {
-      id: Math.random(),
-      title,
-      completed: false,
-    };
-
-    this.tasks.push(newTask);
-
-    return newTask;
-  }
-
-  update(id:number, data: UpdateTaskData){
-    const task = this.findById(id);
-    if(!task){
-        return undefined;
-    }
-    
-    if(data.title !== undefined){
-        task.title = data.title;
-    }
-    
-    if(data.completed !== undefined){
-        task.completed = data.completed;
-    }
-
-    return task;
-  }
-
-  delete(id:number){
-    const task = this.findById(id);
-    
-    if(!task){
-        return false;
-    }
-
-    this.tasks = this.tasks.filter( task => task.id !== id)
-    return true;
-  }
-
+  //filtro
+  return await prisma.task.findMany({
+    where: {
+      completed,
+    },
+  });
 }
 
+  async getById(id: number) {
+  return await prisma.task.findUnique({
+    where: {
+      id,
+    },
+  });
+}
+
+//id, data de criação e completed já são automaticos
+  async create(title: string) {
+  return await prisma.task.create({
+    data: {
+      title,
+    },
+  });
+}
+
+  async update(id: number, data: UpdateTaskData) {
+  return await prisma.task.update({
+    where: {
+      id,
+    },
+    data,
+  });
+}
+
+  async delete(id: number) {
+  return await prisma.task.delete({
+    where: {
+      id,
+    },
+  });
+}
+}
 export const taskService = new TaskService();
